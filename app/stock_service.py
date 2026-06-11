@@ -17,3 +17,15 @@ async def process_stock(order_id: UUID) -> None:
     logger.info("Stock: reserved for order %s", order_id)
 
     await transport_queue.put(order_id)
+
+async def stock_worker() -> None:
+    logger.info("Stock worker started")
+    while True:
+        order_id: UUID = await stock_queue.get()
+        try:
+            await process_stock(order_id)
+        except Exception:
+            logger.exception("Stock: error processing order %s", order_id)
+            order_repository.update_status(order_id, OrderStatus.FAILED)
+        finally:
+            stock_queue.task_done()

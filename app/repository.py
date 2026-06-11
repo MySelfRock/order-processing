@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from app.models import Order, OrderStatus
+from app.models import Order, OrderStatus, StatusTransition, utcnow
 
 class OrderRepository:
     def __init__(self) -> None:

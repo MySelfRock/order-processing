@@ -16,3 +16,15 @@ async def process_transport(order_id: UUID) -> None:
 
     order_repository.update_status(order_id, OrderStatus.SENT_TO_TRANSPORT)
     logger.info("Transport: dispatched order %s", order_id)
+
+async def shipping_worker() -> None:
+    logger.info("Shipping worker started")
+    while True:
+        order_id: UUID = await transport_queue.get()
+        try:
+            await process_transport(order_id)
+        except Exception:
+            logger.exception("Transport: error processing order %s", order_id)
+            order_repository.update_status(order_id, OrderStatus.FAILED)
+        finally:
+            transport_queue.task_done()

@@ -272,25 +272,3 @@ def reset_state():
 ```
 
 ---
-
-## Como rodar
-
-```bash
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-## Como testar
-
-```bash
-pytest tests/ -v
-```
-
-## Endpoints disponíveis
-
-| Método | Rota | Descrição |
-|---|---|---|
-| `POST` | `/orders` | Cria um pedido |
-| `GET` | `/orders/{order_id}` | Consulta pedido completo |
-| `GET` | `/orders/{order_id}/timeline` | Histórico de transições |
-| `GET` | `/docs` | Swagger UI interativo |

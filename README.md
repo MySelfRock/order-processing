@@ -1,6 +1,6 @@
 # Order Processing
 
-API simples de processamento assíncrono de pedidos construída com FastAPI e `asyncio`.
+API de processamento assíncrono de pedidos construída em Python 3.11+ com FastAPI, rodando em um único processo. O objetivo era demonstrar qualidade de código, separação de responsabilidades, uso correto de `async/await` e `asyncio.Queue`, validação de domínio com Pydantic v2, testes automatizados e rastreabilidade de estado.
 
 ---
 
@@ -19,6 +19,23 @@ uvicorn app.main:app --reload
 A API estará disponível em `http://localhost:8000`.
 
 Documentação interativa (Swagger): `http://localhost:8000/docs`
+
+---
+
+## Como testar
+
+```bash
+pytest tests/ -v
+```
+
+## Endpoints disponíveis
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `POST` | `/orders` | Cria um pedido |
+| `GET` | `/orders/{order_id}` | Consulta pedido completo |
+| `GET` | `/orders/{order_id}/timeline` | Histórico de transições |
+| `GET` | `/docs` | Swagger UI interativo |
 
 ---
 
@@ -152,15 +169,3 @@ curl -s -o /dev/null -w "%{http_code}" \
 Resposta esperada: `404`
 
 ---
-
-## Fluxo de status
-
-```
-CREATED
-  → PROCESSING_STOCK    (estoque inicia o processamento)
-  → STOCK_RESERVED      (estoque separado com sucesso)
-  → PROCESSING_TRANSPORT (transporte inicia o envio)
-  → SENT_TO_TRANSPORT   (pedido despachado)
-```
-
-Em caso de erro em qualquer etapa, o status é atualizado para `FAILED`.

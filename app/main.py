@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 
 from fastapi import FastAPI, HTTPException
 
-from app.models import Order, OrderCreate, OrderCreatedResponse, OrderStatus, StatusTransition
+from app.models import Order, OrderCreate, OrderCreatedResponse, OrderStatus, StatusTransition, utcnow
 from app.queues import stock_queue
 from app.repository import order_repository
 from app.shipping_service import shipping_worker
@@ -40,11 +40,15 @@ app = FastAPI(
 
 @app.post("/orders", response_model=OrderCreatedResponse, status_code=201)
 async def create_order(payload: OrderCreate) -> OrderCreatedResponse:
+    now = utcnow()
     order = Order(
         id=uuid4(),
         customer_name=payload.customer_name,
         items=payload.items,
         status=OrderStatus.CREATED,
+        created_at=now,
+        updated_at=now,
+        timeline=[StatusTransition(status=OrderStatus.CREATED, at=now)],
     )
     order_repository.save(order)
     await stock_queue.put(order.id)
@@ -54,7 +58,7 @@ async def create_order(payload: OrderCreate) -> OrderCreatedResponse:
 @app.get("/orders/{order_id}", response_model=Order)
 async def get_order(order_id: UUID) -> Order:
     order = order_repository.get(order_id)
-    if not order:
+    if order is None:
         logger.warning("Order not found: %s", order_id)
         raise HTTPException(status_code=404, detail="Order not found")
     logger.info("Order retrieved: %s", order_id)

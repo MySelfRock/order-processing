@@ -7,25 +7,34 @@ from app.repository import order_repository
 
 logger = logging.getLogger(__name__)
 
-async def process_stock(order_id: UUID) -> None:
+async def process_stock(
+    order_id: UUID,
+    *,
+    out_queue: asyncio.Queue | None = None,
+) -> None:
     logger.info("Stock: processing order %s", order_id)
-
+ 
     order_repository.update_status(order_id, OrderStatus.PROCESSING_STOCK)
     await asyncio.sleep(1)
-
+ 
     order_repository.update_status(order_id, OrderStatus.STOCK_RESERVED)
     logger.info("Stock: reserved for order %s", order_id)
+ 
+    destination = out_queue if out_queue is not None else transport_queue
+    await destination.put(order_id)
 
-    await transport_queue.put(order_id)
-
-async def stock_worker() -> None:
+async def stock_worker(
+    in_queue: asyncio.Queue | None = None,
+    out_queue: asyncio.Queue | None = None,
+) -> None:
     logger.info("Stock worker started")
+    source = in_queue if in_queue is not None else stock_queue
     while True:
-        order_id: UUID = await stock_queue.get()
+        order_id: UUID = await source.get()
         try:
-            await process_stock(order_id)
+            await process_stock(order_id, out_queue=out_queue)
         except Exception:
             logger.exception("Stock: error processing order %s", order_id)
             order_repository.update_status(order_id, OrderStatus.FAILED)
         finally:
-            stock_queue.task_done()
+            source.task_done()

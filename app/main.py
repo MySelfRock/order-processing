@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 
 from fastapi import FastAPI, HTTPException
 
-from app.models import Order, OrderCreate, OrderCreatedResponse, OrderStatus
+from app.models import Order, OrderCreate, OrderCreatedResponse, OrderStatus, StatusTransition
 from app.queues import stock_queue
 from app.repository import order_repository
 from app.shipping_service import shipping_worker
@@ -59,3 +59,12 @@ async def get_order(order_id: UUID) -> Order:
         raise HTTPException(status_code=404, detail="Order not found")
     logger.info("Order retrieved: %s", order_id)
     return order
+
+@app.get("/orders/{order_id}/timeline", response_model=list[StatusTransition])
+async def get_order_timeline(order_id: UUID) -> list[StatusTransition]:
+    order = order_repository.get(order_id)
+    if order is None:
+        logger.warning("Order not found: %s", order_id)
+        raise HTTPException(status_code=404, detail="Order not found")
+    logger.info("Order timeline retrieved: %s", order_id)
+    return order.timeline

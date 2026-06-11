@@ -16,6 +16,15 @@ class OrderRepository:
         order = self._store.get(str(order_id))
         if order is None:
             raise KeyError(f"Order {order_id} not found")
-        self._store[str(order_id)] = order.model_copy(update={"status": status})
+
+        now = utcnow()
+        transition = StatusTransition(status=status, at=now)
+
+        self._store[str(order_id)] = order.model_copy(update={
+            "status": status,
+            "updated_at": now,
+            "timeline": [*order.timeline, transition],
+        })
+
 
 order_repository = OrderRepository()

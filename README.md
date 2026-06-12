@@ -168,4 +168,10 @@ curl -s -o /dev/null -w "%{http_code}" \
 
 Resposta esperada: `404`
 
+```json
+{
+    "detail": "Order not found"
+}
+```
+
 ---

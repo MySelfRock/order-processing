@@ -13,26 +13,26 @@ API de processamento assíncrono de pedidos construída em Python 3.11+ com Fast
 ## Estrutura de arquivos
 
 ```
-order-processing/
+order-processing-edmilson/
 ├── app/
 │   ├── __init__.py
 │   ├── main.py             # FastAPI, lifespan, endpoints
 │   ├── models.py           # Pydantic v2, enums, validação de domínio
-│   ├── repository.py       # Banco em memória encapsulado
 │   ├── queues.py           # asyncio.Queue — singletons de módulo
-│   ├── stock_service.py    # Worker de estoque
+│   ├── repository.py       # Banco em memória encapsulado
 │   └── shipping_service.py # Worker de transporte
+│   ├── stock_service.py    # Worker de estoque
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py         # Fixtures compartilhadas, isolamento de estado
-│   ├── test_models.py      # Testes unitários de validação
 │   ├── test_api.py         # Testes de integração dos endpoints HTTP
+│   ├── test_models.py      # Testes unitários de validação
 │   └── test_workers.py     # Testes de comportamento assíncrono
 ├── .gitignore
-├── pytest.ini
-├── requirements.txt
-├── README.md
 └── DIARY.md                # este arquivo
+├── pytest.ini
+├── README.md
+├── requirements.txt
 ```
 
 ---
@@ -140,7 +140,7 @@ async def stock_worker(
     source = in_queue if in_queue is not None else _queues.stock_queue
     ...
 ```
-# Rever este ponto (_queue)
+
 Em produção, usa as filas globais de módulo. Nos testes, recebe filas locais isoladas. Essa decisão surgiu de um problema real de vazamento de estado entre testes — e resolveu o problema de forma limpa sem precisar de mocks nas filas.
 
 ---

@@ -2,7 +2,7 @@ import asyncio
 import logging
 from uuid import UUID
 from app.models import OrderStatus
-from app.queues import stock_queue, transport_queue
+from app import queues as _queues
 from app.repository import order_repository
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ async def process_stock(
     order_repository.update_status(order_id, OrderStatus.STOCK_RESERVED)
     logger.info("Stock: reserved for order %s", order_id)
  
-    destination = out_queue if out_queue is not None else transport_queue
+    destination = out_queue if out_queue is not None else _queues.transport_queue
     await destination.put(order_id)
 
 async def stock_worker(
@@ -28,7 +28,7 @@ async def stock_worker(
     out_queue: asyncio.Queue | None = None,
 ) -> None:
     logger.info("Stock worker started")
-    source = in_queue if in_queue is not None else stock_queue
+    source = in_queue if in_queue is not None else _queues.stock_queue
     while True:
         order_id: UUID = await source.get()
         try:
